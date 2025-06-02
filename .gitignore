@@ -1,0 +1,12 @@
+__pycache__
+.venv
+
+trained_model/**/*
+!trained_model/.keep
+
+datasets/**/*
+!datasets/.keep
+
+/*.txt
+/*.db
+*.log
