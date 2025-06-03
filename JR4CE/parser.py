@@ -30,7 +30,10 @@ def parse_args():
         "--val_interval", type=int, default=1, help="Validation interval."
     )
     parser.add_argument(
-        "--save_path", nargs="?", default="", help="Model path for saving."
+        "--save_path",
+        nargs="?",
+        default="trained_model",
+        help="Model path for saving.",
     )
     parser.add_argument(
         "--model_path", nargs="?", default="", help="Model path for evaluation."

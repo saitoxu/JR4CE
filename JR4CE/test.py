@@ -22,7 +22,6 @@ if __name__ == "__main__":
     graph_data = train_dataset.data(device)
     test_data = eval_dataset(data_path, "test.txt")
 
-    model = torch.load(args.model_path)
-    torch.save(model.state_dict(), "parameters.pth")
+    model = torch.load(args.model_path, weights_only=False).to(device)
     Ks = eval(args.Ks)
     evaluate(test_data, model, Ks, device, graph_data, log=print, save_ranking=True)
