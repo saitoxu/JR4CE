@@ -78,7 +78,6 @@ if __name__ == "__main__":
         neg_sample_size=args.neg_size,
         threshold_user=args.threshold_user,
         threshold_item=args.threshold_item,
-        neg_uniform=args.neg_uniform == 1,
     )
     graph_data = train_dataset.data(device)
     train_dataloader = DataLoader(
@@ -92,7 +91,6 @@ if __name__ == "__main__":
         item_size=train_dataset.item_size,
         entity_size=train_dataset.entity_size,
         dim=args.dim,
-        user_sep=args.user_sep == 1,
         num_gcn_layer=args.num_gcn_layer,
         kg_module=args.kg_module == 1,
         cf_module=args.cf_module == 1,

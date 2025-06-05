@@ -12,7 +12,6 @@ class Model(torch.nn.Module):
         item_size: int,
         entity_size: int,
         dim: int,
-        user_sep: bool,
         num_gcn_layer: int,
         kg_module: bool,
         cf_module: bool,
@@ -36,7 +35,6 @@ class Model(torch.nn.Module):
             add_self_loops=False,
         )
         self.gcn_layers = nn.ModuleList([GCNLayer() for _ in range(num_gcn_layer)])
-        self._user_sep = user_sep
         self._kg_module = kg_module
         self._cf_module = cf_module
 
@@ -75,19 +73,6 @@ class Model(torch.nn.Module):
         if not self._kg_module:
             return self.embed.weight[self.item_size + self.attr_size :, :]
 
-        # 現在と希望で分ける方法
-        if self._user_sep:
-            entities2 = self.gat(self.embed.weight, data["user_current_edge_index"].T)
-            entities3 = self.gat(
-                self.embed.weight, data["user_preference_edge_index"].T
-            )
-            current_users = entities2[self.item_size : self.item_size + self.user_size]
-            preference_users = entities3[
-                self.item_size : self.item_size + self.user_size
-            ]
-            users = (current_users + preference_users) / 2
-            return users
-        # 現在と希望で分けない方法
         edge_index = torch.cat(
             [data["user_current_edge_index"], data["user_preference_edge_index"]], dim=0
         )

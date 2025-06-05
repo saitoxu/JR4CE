@@ -17,7 +17,6 @@ if __name__ == "__main__":
         neg_sample_size=args.neg_size,
         threshold_user=args.threshold_user,
         threshold_item=args.threshold_item,
-        neg_uniform=args.neg_uniform == 1,
     )
     graph_data = train_dataset.data(device)
     test_data = eval_dataset(data_path, "test.txt")

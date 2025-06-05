@@ -2,13 +2,13 @@ import argparse
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run V1.")
+    parser = argparse.ArgumentParser(description="Run JR4CE.")
     parser.add_argument("--seed", type=int, default=1234, help="Random seed.")
     parser.add_argument(
         "--dataset",
         nargs="?",
-        default="glit4th_2021",
-        help="Choose a dataset from {glit}.",
+        default="glit_2021",
+        help="Choose a dataset from {glit_2021, glit_2022}.",
     )
     parser.add_argument(
         "--data_path", nargs="?", default="datasets", help="Input data path."
@@ -55,12 +55,6 @@ def parse_args():
         type=float,
         default=0.5,
         help="Disimilarity threshold for item.",
-    )
-    parser.add_argument(
-        "--neg_uniform", type=int, default=0, help="Negative sampling strategy."
-    )
-    parser.add_argument(
-        "--user_sep", type=int, default=1, help="User embedding separation."
     )
     parser.add_argument(
         "--num_gcn_layer", type=int, default=2, help="Number of GCN layers."

@@ -1,13 +1,9 @@
-import pickle
 import random
 
-import networkx as nx
 import numpy as np
 import scipy.sparse as sp
 import torch
 from torch.utils.data import Dataset
-from torch_geometric.data import Data
-from torch_geometric.utils import to_networkx
 
 R_IND_JOB = 0
 R_OCC_JOB = 1
@@ -33,7 +29,6 @@ class TrainDataset(Dataset):
         neg_sample_size: int,
         threshold_user: float,
         threshold_item: float,
-        neg_uniform: bool,
     ):
         self.user_size = _get_size(f"{data_path}/user_original_id_map.txt")
         self.item_size = _get_size(f"{data_path}/item_original_id_map.txt")
@@ -56,7 +51,6 @@ class TrainDataset(Dataset):
         )
         self._all_item_ids = set(list(range(self.item_size)))
         self._neg_sample_size = neg_sample_size
-        self._neg_uniform = neg_uniform
         self._user_observed_items = _load_user_observed_items(data_path)
         self.entity_item_map = _load_entity_item_map(
             data_path, self.entity_size, self.user_size, self.item_size
@@ -70,15 +64,6 @@ class TrainDataset(Dataset):
             self.user_preference_edge_type,
             self.num_relations,
         ) = _load_kg(data_path)
-        self.user_neg_sampling_weights = _user_neg_sampling_weights(
-            data_path,
-            self.entity_size,
-            self.item_size,
-            self.item_edge_index,
-            self.user_current_edge_index,
-            self.user_preference_edge_index,
-            self._user_observed_items,
-        )
         self._div_data = _preference_beyond_items(
             data_path, self.user_size, self.item_size, threshold_user, threshold_item
         )
@@ -117,14 +102,10 @@ class TrainDataset(Dataset):
         return _edge_index
 
     def _negative_sampling(self, user_id: int, size: int) -> list[int]:
-        if self._neg_uniform:
-            # 一様分布からサンプリング
-            weights = np.ones(self.item_size)
-            weights[list(self._user_observed_items[user_id])] = 0
-            weights = weights / np.sum(weights)
-        else:
-            # ユーザーに近いアイテムを高い確率でサンプリング
-            weights = self.user_neg_sampling_weights[user_id]
+        # 一様分布からサンプリング
+        weights = np.ones(self.item_size)
+        weights[list(self._user_observed_items[user_id])] = 0
+        weights = weights / np.sum(weights)
         return list(
             np.random.choice(self.item_size, size=size, replace=False, p=weights)
         )
@@ -233,49 +214,6 @@ def _load_user_observed_items(data_path: str) -> dict[int, set[int]]:
     return user_observed_items
 
 
-def _user_neg_sampling_weights(
-    data_path: str,
-    entity_size: int,
-    item_size: int,
-    item_edge_index: torch.Tensor,
-    user_current_edge_index: torch.Tensor,
-    user_preference_edge_index: torch.Tensor,
-    user_observed_items: dict[int, set[int]],
-):
-    user_neg_sampling_weights = {}
-    try:
-        with open(f"{data_path}/user_neg_sampling_weights.pickle", "rb") as f:
-            user_neg_sampling_weights = pickle.load(f)
-            return user_neg_sampling_weights
-    except FileNotFoundError:
-        pass
-    edge_index = torch.cat(
-        [item_edge_index, user_current_edge_index, user_preference_edge_index], dim=0
-    )
-    data = Data(edge_index=edge_index.T, num_nodes=entity_size)
-    graph = to_networkx(data, to_undirected=True)
-
-    for user_id, observed_items in user_observed_items.items():
-        start_node = item_size + user_id
-        max_hop = 0
-        weights = []
-        for item_id in range(item_size):
-            end_node = item_id
-            hop = nx.shortest_path_length(graph, start_node, end_node)
-            max_hop = max(max_hop, hop)
-            weights.append(hop)
-        weights = np.array(weights, dtype=float)
-        weights = max_hop - weights + 1
-        weights[list(observed_items)] = 0
-        weights /= np.sum(weights)
-        user_neg_sampling_weights[user_id] = weights
-
-    with open(f"{data_path}/user_neg_sampling_weights.pickle", "wb") as f:
-        pickle.dump(user_neg_sampling_weights, f)
-
-    return user_neg_sampling_weights
-
-
 def _load_entity_item_map(
     data_path: str, entity_size: int, user_size: int, item_size: int
 ) -> torch.Tensor:
@@ -339,20 +277,3 @@ def _preference_beyond_items(
 
     data = {k: list(v) for k, v in data.items()}
     return data
-
-
-if __name__ == "__main__":
-    data_path = "datasets/glit4th_2022"
-    dataset = TrainDataset(
-        data_path=data_path,
-        neg_sample_size=2,
-        threshold_user=0.9,
-        threshold_item=0.3,
-        neg_uniform=True,
-    )
-    # user_ids = [59, 2810, 4617, 343, 91, 4114, 3565, 4185, 605, 4548, 2805]
-    # for user_id in user_ids:
-    #     print(user_id, len(dataset._div_data[user_id]))
-    with open("item_sizes2.txt", "w") as f:
-        for user_id, item_ids in dataset._div_data.items():
-            f.write(f"{user_id} {len(item_ids)}\n")
