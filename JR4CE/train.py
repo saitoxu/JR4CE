@@ -36,7 +36,7 @@ def train(
 
         rec_loss = model.rec_loss(users, pos_items, neg_item_lists, graph_data)
 
-        index = div_pos_items > 0  # ユーザーによってはない場合がある
+        index = div_pos_items > 0
         _users = users[index]
         _div_pos_items = div_pos_items[index]
         _neg_item_lists = neg_item_lists[index]

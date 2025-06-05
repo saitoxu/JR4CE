@@ -102,7 +102,6 @@ class TrainDataset(Dataset):
         return _edge_index
 
     def _negative_sampling(self, user_id: int, size: int) -> list[int]:
-        # 一様分布からサンプリング
         weights = np.ones(self.item_size)
         weights[list(self._user_observed_items[user_id])] = 0
         weights = weights / np.sum(weights)

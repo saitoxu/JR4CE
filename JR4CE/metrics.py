@@ -4,7 +4,7 @@ import torch
 item_entity_map = {}
 
 
-def evaluate(eval_data, model, Ks, device, graph_data, log=print, save_ranking=False):
+def evaluate(eval_data, model, Ks, device, graph_data, log=print):
     global item_entity_map
     model.eval()
     users = []
@@ -16,7 +16,6 @@ def evaluate(eval_data, model, Ks, device, graph_data, log=print, save_ranking=F
         entity_item_map = graph_data["entity_item_map"]
         for i in range(model.item_size):
             entity_ids = torch.nonzero(entity_item_map.T[i]).squeeze().tolist()
-            # 1要素しかないとintになる
             if isinstance(entity_ids, int):
                 entity_ids = [entity_ids]
             item_entity_map[i] = set(entity_ids)
@@ -50,9 +49,7 @@ def evaluate(eval_data, model, Ks, device, graph_data, log=print, save_ranking=F
             ):
                 pred[observed_items] = -np.inf
                 indices = torch.argsort(pred, descending=True).cpu()
-                rank = (
-                    np.where(indices == pos_item)[0][0] + 1
-                )  # インデックスは0から始まるため、+1する
+                rank = np.where(indices == pos_item)[0][0] + 1
                 ranking = indices.tolist()[: -len(observed_items)]
                 users.append(int(user.cpu()))
                 ranks.append(rank)
@@ -62,8 +59,6 @@ def evaluate(eval_data, model, Ks, device, graph_data, log=print, save_ranking=F
         ranks, Ks, ranking_lists, item_entity_map, model.attr_size
     )
     _display_metrics(mrr, hrs, ndcgs, diversities, ccs, log)
-    if save_ranking:
-        _display_ranking(users, ranks, ranking_lists)
     return mrr, hrs, ndcgs
 
 
@@ -175,13 +170,3 @@ def _display_metrics(mrr, hrs, ndcgs, diversities, ccs, log):
     log(f"nDCGs:\t{rounded_ndcgs}")
     log(f"Divs:\t{rounded_diversities}")
     log(f"CCs:\t{rounded_ccs}")
-
-
-def _display_ranking(
-    users: list[int], ranks: list[int], ranking_lists: list[list[int]]
-):
-    with open("ranking.txt", "w") as f:
-        for user, rank, ranking in zip(users, ranks, ranking_lists):
-            array = [user] + [int(rank)] + ranking
-            array = list(map(str, array))
-            f.write(" ".join(array) + "\n")

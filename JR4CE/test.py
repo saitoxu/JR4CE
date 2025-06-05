@@ -23,4 +23,4 @@ if __name__ == "__main__":
 
     model = torch.load(args.model_path, weights_only=False).to(device)
     Ks = eval(args.Ks)
-    evaluate(test_data, model, Ks, device, graph_data, log=print, save_ranking=True)
+    evaluate(test_data, model, Ks, device, graph_data, log=print)
