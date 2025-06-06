@@ -92,7 +92,7 @@ if __name__ == "__main__":
         entity_size=train_dataset.entity_size,
         dim=args.dim,
         num_gcn_layer=args.num_gcn_layer,
-        kg_module=args.kg_module == 1,
+        kgl_module=args.kgl_module == 1,
         cf_module=args.cf_module == 1,
         device=device,
     ).to(device)

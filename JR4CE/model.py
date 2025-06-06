@@ -13,7 +13,7 @@ class Model(torch.nn.Module):
         entity_size: int,
         dim: int,
         num_gcn_layer: int,
-        kg_module: bool,
+        kgl_module: bool,
         cf_module: bool,
         device: str,
     ):
@@ -35,7 +35,7 @@ class Model(torch.nn.Module):
             add_self_loops=False,
         )
         self.gcn_layers = nn.ModuleList([GCNLayer() for _ in range(num_gcn_layer)])
-        self._kg_module = kg_module
+        self._kgl_module = kgl_module
         self._cf_module = cf_module
 
     def forward(self, data):
@@ -63,14 +63,14 @@ class Model(torch.nn.Module):
         return normalize_adj_matrix(data["ui_adj_mtx"], device=self.device)
 
     def _item_representations(self, data) -> torch.Tensor:
-        if not self._kg_module:
+        if not self._kgl_module:
             return self.embed.weight[: self.item_size, :]
 
         entities = self.gat(self.embed.weight, data["item_edge_index"].T)
         return entities[: self.item_size, :]
 
     def _user_representations(self, data) -> torch.Tensor:
-        if not self._kg_module:
+        if not self._kgl_module:
             return self.embed.weight[self.item_size + self.attr_size :, :]
 
         edge_index = torch.cat(

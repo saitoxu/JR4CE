@@ -5,22 +5,6 @@ import scipy.sparse as sp
 import torch
 from torch.utils.data import Dataset
 
-R_IND_JOB = 0
-R_OCC_JOB = 1
-R_EMP_JOB = 2
-
-R_HOPE_IND_USER = 3
-R_HOPE_OCC_USER = 4
-R_HOPE_EMP_USER = 5
-
-R_CUR_IND_USER = 6
-R_CUR_OCC_USER = 7
-R_CUR_EMP_USER = 8
-
-R_INC_JOB = 9
-R_HOPE_INC_USER = 10
-R_CUR_INC_USER = 11
-
 
 class TrainDataset(Dataset):
     def __init__(
@@ -30,22 +14,14 @@ class TrainDataset(Dataset):
         threshold_user: float,
         threshold_item: float,
     ):
-        self.user_size = _get_size(f"{data_path}/user_original_id_map.txt")
-        self.item_size = _get_size(f"{data_path}/item_original_id_map.txt")
-        industry_size = _get_size(f"{data_path}/industry_original_id_map.txt")
-        job_type_size = _get_size(f"{data_path}/job_type_original_id_map.txt")
-        employment_type_size = _get_size(
-            f"{data_path}/employment_type_original_id_map.txt"
-        )
-        annual_income_size = _get_size(f"{data_path}/annual_income_original_id_map.txt")
-        self.entity_size = (
-            self.user_size
-            + self.item_size
-            + industry_size
-            + job_type_size
-            + employment_type_size
-            + annual_income_size
-        )
+        (
+            self.user_size,
+            self.item_size,
+            self.entity_size,
+            item_relations,
+            user_preference_relations,
+            user_current_relations,
+        ) = _load_info(data_path)
         self._data, self.ui_adj_mtx = self._load_data(
             self.user_size, self.item_size, data_path
         )
@@ -63,9 +39,18 @@ class TrainDataset(Dataset):
             self.user_preference_edge_index,
             self.user_preference_edge_type,
             self.num_relations,
-        ) = _load_kg(data_path)
-        self._div_data = _preference_beyond_items(
-            data_path, self.user_size, self.item_size, threshold_user, threshold_item
+        ) = _load_kg(
+            data_path, item_relations, user_preference_relations, user_current_relations
+        )
+        self._div_data = _diversity_data_augmentation(
+            data_path,
+            self.user_size,
+            self.item_size,
+            threshold_user,
+            threshold_item,
+            item_relations,
+            user_preference_relations,
+            user_current_relations,
         )
 
     def __len__(self):
@@ -136,7 +121,7 @@ class TrainDataset(Dataset):
 
 def eval_dataset(data_path: str, data_file: str) -> list[tuple[int, int, list[int]]]:
     data = []
-    item_size = _get_size(f"{data_path}/item_original_id_map.txt")
+    _, item_size, _, _, _, _ = _load_info(data_path)
     all_item_ids = set(list(range(item_size)))
     user_observed_items = _load_user_observed_items(data_path)
 
@@ -150,7 +135,12 @@ def eval_dataset(data_path: str, data_file: str) -> list[tuple[int, int, list[in
     return data
 
 
-def _load_kg(data_path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def _load_kg(
+    data_path: str,
+    item_relations: list[int],
+    user_preference_relations: list[int],
+    user_current_relations: list[int],
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     item_edge_index = []
     item_edge_type = []
     user_current_edge_index = []
@@ -161,23 +151,20 @@ def _load_kg(data_path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     with open(f"{data_path}/kg.txt") as f:
         for line in f:
             h, r, t = map(int, line.split())
-            if r in [R_IND_JOB, R_OCC_JOB, R_EMP_JOB, R_INC_JOB]:
+            if r in item_relations:
                 item_edge_index.append([h, t])
                 item_edge_type.append(r)
                 num_relations = max(num_relations, r + 1)
-            elif r in [R_CUR_IND_USER, R_CUR_OCC_USER, R_CUR_EMP_USER, R_CUR_INC_USER]:
+            elif r in user_current_relations:
                 user_current_edge_index.append([h, t])
                 user_current_edge_type.append(r)
                 num_relations = max(num_relations, r + 1)
-            elif r in [
-                R_HOPE_IND_USER,
-                R_HOPE_OCC_USER,
-                R_HOPE_EMP_USER,
-                R_HOPE_INC_USER,
-            ]:
+            elif r in user_preference_relations:
                 user_preference_edge_index.append([h, t])
                 user_preference_edge_type.append(r)
                 num_relations = max(num_relations, r + 1)
+            else:
+                raise ValueError(f"Unknown relation {r} in kg.txt")
     return (
         torch.tensor(item_edge_index),
         torch.tensor(item_edge_type),
@@ -187,17 +174,6 @@ def _load_kg(data_path: str) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         torch.tensor(user_preference_edge_type),
         num_relations,
     )
-
-
-def _get_size(data_path: str) -> int:
-    try:
-        _size = 0
-        with open(data_path) as f:
-            for _ in f:
-                _size += 1
-        return _size
-    except FileNotFoundError:
-        return 0
 
 
 def _load_user_observed_items(data_path: str) -> dict[int, set[int]]:
@@ -226,12 +202,38 @@ def _load_entity_item_map(
     return t[(item_size + user_size) :]
 
 
-def _preference_beyond_items(
+def _load_info(
+    data_path: str,
+) -> tuple[int, int, int, list[int], list[int], list[int], list[int]]:
+    data = []
+    with open(f"{data_path}/info.txt") as f:
+        for line in f:
+            data.append(list(map(int, line.split())))
+    user_size = data[0][0]
+    item_size = data[0][1]
+    entity_size = data[0][2]
+    item_relations = data[1]
+    user_preference_relations = data[2]
+    user_current_relations = data[3]
+    return (
+        user_size,
+        item_size,
+        entity_size,
+        item_relations,
+        user_preference_relations,
+        user_current_relations,
+    )
+
+
+def _diversity_data_augmentation(
     data_path: str,
     user_size: int,
     item_size: int,
     threshold_user: float,
     threshold_item: float,
+    item_relations: list[int],
+    user_preference_relations: list[int],
+    user_current_relations: list[int],
 ) -> dict[int, list[int]]:
     interactions = {}
     with open(f"{data_path}/train.txt") as f:
@@ -244,17 +246,14 @@ def _preference_beyond_items(
     with open(f"{data_path}/kg.txt") as f:
         for line in f:
             h, r, t = map(int, line.split())
-            if r in [
-                R_HOPE_IND_USER,
-                R_HOPE_OCC_USER,
-                R_HOPE_EMP_USER,
-                R_HOPE_INC_USER,
-            ]:
+            if r in user_preference_relations:
                 preferences.setdefault(t - item_size, set()).add(h)
-            elif r in [R_CUR_IND_USER, R_CUR_OCC_USER, R_CUR_EMP_USER, R_CUR_INC_USER]:
+            elif r in user_current_relations:
                 currents.setdefault(t - item_size, set()).add(h)
-            elif r in [R_IND_JOB, R_OCC_JOB, R_EMP_JOB, R_INC_JOB]:
+            elif r in item_relations:
                 items.setdefault(h, set()).add(t)
+            else:
+                raise ValueError(f"Unknown relation {r} in kg.txt")
 
     data = {}
     for target_user_id in range(user_size):

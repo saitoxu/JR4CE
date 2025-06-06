@@ -60,7 +60,7 @@ def parse_args():
         "--num_gcn_layer", type=int, default=2, help="Number of GCN layers."
     )
     parser.add_argument(
-        "--kg_module", type=int, default=1, help="Knowledge graph module."
+        "--kgl_module", type=int, default=1, help="Knowledge graph learning module."
     )
     parser.add_argument(
         "--cf_module", type=int, default=1, help="Collaborative filtering module."
