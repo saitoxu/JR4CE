@@ -95,6 +95,8 @@ if __name__ == "__main__":
         kgl_module=args.kgl_module == 1,
         cf_module=args.cf_module == 1,
         device=device,
+        use_edge_type=args.use_edge_type == 1,
+        edge_type_size=train_dataset.num_relations if args.use_edge_type == 1 else 0,
     ).to(device)
 
     optimizer = torch.optim.Adam(

@@ -132,6 +132,72 @@ Information data for users, items, and knowledge graph entities.
 <user_current_relation_id> <user_current_relation_id> ...
 ```
 
+## Baseline Methods (MMR/DPP)
+
+This repository also includes implementations of baseline reranking methods: MMR (Maximum Marginal Relevance) and DPP (Determinantal Point Process).
+
+### Evaluation with Baseline Methods
+
+To evaluate using MMR or DPP, you first need to train a JR4CE model and extract embeddings, or prepare your own embeddings.
+
+#### Usage
+
+```sh
+# MMR
+$ poetry run python -m reranker.test \
+    --dataset <dataset_name> \
+    --model mmr \
+    --user_embeddings_path <path_to_user_embeddings> \
+    --item_embeddings_path <path_to_item_embeddings> \
+    --lambda_factor 0.7
+
+# DPP
+$ poetry run python -m reranker.test \
+    --dataset <dataset_name> \
+    --model dpp \
+    --user_embeddings_path <path_to_user_embeddings> \
+    --item_embeddings_path <path_to_item_embeddings> \
+    --temperature 1.0
+```
+
+#### Arguments
+
+```sh
+$ poetry run python -m reranker.test -h
+usage: test.py [-h] [--dataset [DATASET]] [--data_path [DATA_PATH]] [--Ks [KS]] [--seed SEED]
+               [--model MODEL] [--lambda_factor LAMBDA_FACTOR] [--temperature TEMPERATURE]
+               [--user_embeddings_path USER_EMBEDDINGS_PATH] [--item_embeddings_path ITEM_EMBEDDINGS_PATH]
+               [--use_parallel] [--n_workers N_WORKERS]
+
+Run MMR/DPP reranking.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dataset [DATASET]   Choose a dataset from {glit}.
+  --data_path [DATA_PATH]
+                        Input data path.
+  --Ks [KS]             Calculate metric@K when evaluating.
+  --seed SEED           Seed for ranking model.
+  --model MODEL         Model name (mmr or dpp).
+  --lambda_factor LAMBDA_FACTOR
+                        Lambda factor for MMR (default: 0.7).
+  --temperature TEMPERATURE
+                        Temperature for DPP (default: 1.0).
+  --user_embeddings_path USER_EMBEDDINGS_PATH
+                        Path to user embeddings file (.pt).
+  --item_embeddings_path ITEM_EMBEDDINGS_PATH
+                        Path to item embeddings file (.pt).
+  --use_parallel        Use parallel processing for reranking.
+  --n_workers N_WORKERS
+                        Number of workers for parallel processing.
+```
+
+#### Embedding Format
+
+User and item embeddings should be saved as PyTorch tensors:
+- `user_embeddings.pt`: Tensor of shape `(user_size, dim)`
+- `item_embeddings.pt`: Tensor of shape `(item_size, dim)`
+
 ## Citation
 
 WIP

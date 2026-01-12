@@ -7,8 +7,8 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         nargs="?",
-        default="glit_2021",
-        help="Choose a dataset from {glit_2021, glit_2022}.",
+        default="glit2021",
+        help="Choose a dataset from {glit2021, glit2022}.",
     )
     parser.add_argument(
         "--data_path", nargs="?", default="datasets", help="Input data path."
@@ -64,6 +64,12 @@ def parse_args():
     )
     parser.add_argument(
         "--cf_module", type=int, default=1, help="Collaborative filtering module."
+    )
+    parser.add_argument(
+        "--use_edge_type",
+        type=int,
+        default=0,
+        help="Whether to use edge type information in GAT.",
     )
 
     return parser.parse_args()
