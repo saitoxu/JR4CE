@@ -37,16 +37,17 @@ You can see the usage by the following command.
 
 ```sh
 $ poetry run python -m JR4CE.train -h
-usage: train.py [-h] [--seed SEED] [--dataset [DATASET]] [--data_path [DATA_PATH]] [--dim DIM] [--epoch EPOCH] [--batch_size BATCH_SIZE] [--lr LR] [--patience PATIENCE]
-                [--Ks [KS]] [--val_interval VAL_INTERVAL] [--save_path [SAVE_PATH]] [--model_path [MODEL_PATH]] [--neg_size NEG_SIZE] [--div_lambda DIV_LAMBDA]
-                [--threshold_user THRESHOLD_USER] [--threshold_item THRESHOLD_ITEM] [--num_gcn_layer NUM_GCN_LAYER] [--kgl_module KGL_MODULE] [--cf_module CF_MODULE]
+usage: train.py [-h] [--seed SEED] [--dataset [DATASET]] [--data_path [DATA_PATH]] [--dim DIM] [--epoch EPOCH] [--batch_size BATCH_SIZE] [--lr LR]
+                [--patience PATIENCE] [--Ks [KS]] [--val_interval VAL_INTERVAL] [--save_path [SAVE_PATH]] [--model_path [MODEL_PATH]] [--neg_size NEG_SIZE]
+                [--div_lambda DIV_LAMBDA] [--threshold_user THRESHOLD_USER] [--threshold_item THRESHOLD_ITEM] [--num_gcn_layer NUM_GCN_LAYER]
+                [--kgl_module KGL_MODULE] [--cf_module CF_MODULE] [--use_edge_type USE_EDGE_TYPE]
 
 Run JR4CE.
 
 optional arguments:
   -h, --help            show this help message and exit
   --seed SEED           Random seed.
-  --dataset [DATASET]   Choose a dataset from {glit_2021, glit_2022}.
+  --dataset [DATASET]   Choose a dataset from {glit2021, glit2022}.
   --data_path [DATA_PATH]
                         Input data path.
   --dim DIM             Number of dimension.
@@ -75,6 +76,8 @@ optional arguments:
                         Knowledge graph learning module.
   --cf_module CF_MODULE
                         Collaborative filtering module.
+  --use_edge_type USE_EDGE_TYPE
+                        Whether to use edge type information in GAT.
 ```
 
 ### Evaluation
@@ -136,11 +139,9 @@ Information data for users, items, and knowledge graph entities.
 
 This repository also includes implementations of baseline reranking methods: MMR (Maximum Marginal Relevance) and DPP (Determinantal Point Process).
 
-### Evaluation with Baseline Methods
-
 To evaluate using MMR or DPP, you first need to train a JR4CE model and extract embeddings, or prepare your own embeddings.
 
-#### Usage
+### Usage
 
 ```sh
 # MMR
@@ -160,7 +161,7 @@ $ poetry run python -m reranker.test \
     --temperature 1.0
 ```
 
-#### Arguments
+### Arguments
 
 ```sh
 $ poetry run python -m reranker.test -h
@@ -173,7 +174,7 @@ Run MMR/DPP reranking.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --dataset [DATASET]   Choose a dataset from {glit}.
+  --dataset [DATASET]   Choose a dataset from {glit2021, glit2022}.
   --data_path [DATA_PATH]
                         Input data path.
   --Ks [KS]             Calculate metric@K when evaluating.
@@ -192,7 +193,7 @@ optional arguments:
                         Number of workers for parallel processing.
 ```
 
-#### Embedding Format
+### Embedding Format
 
 User and item embeddings should be saved as PyTorch tensors:
 - `user_embeddings.pt`: Tensor of shape `(user_size, dim)`
