@@ -7,8 +7,8 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         nargs="?",
-        default="glit_2021",
-        help="Choose a dataset from {glit_2021, glit_2022}.",
+        default="glit2021",
+        help="Choose a dataset from {glit2021, glit2022}.",
     )
     parser.add_argument(
         "--data_path", nargs="?", default="datasets", help="Input data path."

@@ -10,3 +10,4 @@ datasets/**/*
 /*.txt
 /*.db
 *.log
+scripts/**/*
