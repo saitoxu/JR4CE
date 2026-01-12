@@ -23,9 +23,9 @@ class GAT(nn.Module):
             ]
         )
 
-    def forward(self, x, edge_index):
+    def forward(self, x, edge_index, edge_attr=None):
         _x = x
         for gat_layer in self.gat_layers:
-            _x = gat_layer(_x, edge_index)
+            _x = gat_layer(_x, edge_index, edge_attr=edge_attr)
             _x = F.normalize(_x)
         return _x

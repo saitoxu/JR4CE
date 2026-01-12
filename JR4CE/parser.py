@@ -65,5 +65,11 @@ def parse_args():
     parser.add_argument(
         "--cf_module", type=int, default=1, help="Collaborative filtering module."
     )
+    parser.add_argument(
+        "--use_edge_type",
+        type=int,
+        default=0,
+        help="Whether to use edge type information in GAT.",
+    )
 
     return parser.parse_args()

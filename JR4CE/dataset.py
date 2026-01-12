@@ -69,22 +69,37 @@ class TrainDataset(Dataset):
         )
 
     def data(self, device: str) -> dict:
+        item_edge_index, item_edge_type = self._add_reverse_edges(
+            self.item_edge_index.to(device), self.item_edge_type.to(device)
+        )
+        user_current_edge_index, user_current_edge_type = self._add_reverse_edges(
+            self.user_current_edge_index.to(device),
+            self.user_current_edge_type.to(device),
+        )
+        user_preference_edge_index, user_preference_edge_type = self._add_reverse_edges(
+            self.user_preference_edge_index.to(device),
+            self.user_preference_edge_type.to(device),
+        )
         return dict(
             entity_item_map=self.entity_item_map.to(device),
-            item_edge_index=self._add_reverse_edges(self.item_edge_index.to(device)),
-            user_current_edge_index=self._add_reverse_edges(
-                self.user_current_edge_index.to(device)
-            ),
-            user_preference_edge_index=self._add_reverse_edges(
-                self.user_preference_edge_index.to(device)
-            ),
+            item_edge_index=item_edge_index,
+            item_edge_type=item_edge_type,
+            user_current_edge_index=user_current_edge_index,
+            user_current_edge_type=user_current_edge_type,
+            user_preference_edge_index=user_preference_edge_index,
+            user_preference_edge_type=user_preference_edge_type,
             ui_adj_mtx=torch.Tensor(self.ui_adj_mtx.todense()).to(device),
         )
 
-    def _add_reverse_edges(self, edge_index) -> torch.Tensor:
+    def _add_reverse_edges(self, edge_index, edge_type=None) -> tuple:
         reversed_edge_index = torch.stack([edge_index.T[1], edge_index.T[0]], dim=0).T
         _edge_index = torch.cat([edge_index, reversed_edge_index], dim=0)
-        return _edge_index
+
+        if edge_type is not None:
+            _edge_type = torch.cat([edge_type, edge_type], dim=0)
+            return _edge_index, _edge_type
+
+        return _edge_index, None
 
     def _negative_sampling(self, user_id: int, size: int) -> list[int]:
         weights = np.ones(self.item_size)

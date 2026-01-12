@@ -16,6 +16,8 @@ class Model(torch.nn.Module):
         kgl_module: bool,
         cf_module: bool,
         device: str,
+        use_edge_type: bool = False,
+        edge_type_size: int = 0,
     ):
         super(Model, self).__init__()
 
@@ -37,6 +39,14 @@ class Model(torch.nn.Module):
         self.gcn_layers = nn.ModuleList([GCNLayer() for _ in range(num_gcn_layer)])
         self._kgl_module = kgl_module
         self._cf_module = cf_module
+        self.use_edge_type = use_edge_type
+        if use_edge_type and edge_type_size > 0:
+            self.edge_embed = nn.Embedding(edge_type_size, dim)
+            nn.init.xavier_uniform_(
+                self.edge_embed.weight, gain=nn.init.calculate_gain("relu")
+            )
+        else:
+            self.edge_embed = None
 
     def forward(self, data):
         items = self._item_representations(data)
@@ -66,7 +76,13 @@ class Model(torch.nn.Module):
         if not self._kgl_module:
             return self.embed.weight[: self.item_size, :]
 
-        entities = self.gat(self.embed.weight, data["item_edge_index"].T)
+        edge_attr = None
+        if self.use_edge_type and self.edge_embed is not None:
+            edge_attr = self.edge_embed(data["item_edge_type"])
+
+        entities = self.gat(
+            self.embed.weight, data["item_edge_index"].T, edge_attr=edge_attr
+        )
         return entities[: self.item_size, :]
 
     def _user_representations(self, data) -> torch.Tensor:
@@ -76,7 +92,15 @@ class Model(torch.nn.Module):
         edge_index = torch.cat(
             [data["user_current_edge_index"], data["user_preference_edge_index"]], dim=0
         )
-        entities = self.gat(self.embed.weight, edge_index.T)
+        edge_attr = None
+        if self.use_edge_type and self.edge_embed is not None:
+            edge_type = torch.cat(
+                [data["user_current_edge_type"], data["user_preference_edge_type"]],
+                dim=0,
+            )
+            edge_attr = self.edge_embed(edge_type)
+
+        entities = self.gat(self.embed.weight, edge_index.T, edge_attr=edge_attr)
         users = entities[self.item_size : self.item_size + self.user_size]
         return users
 
