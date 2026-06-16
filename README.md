@@ -86,6 +86,31 @@ optional arguments:
 $ poetry run python -m JR4CE.test --model_path trained_model/best.pth # please specify your model path
 ```
 
+## Hyperparameters used in the paper
+
+The following table reports the hyperparameter values used to produce the main results in Table 2 of the paper. These were selected via Optuna (Pareto-optimal w.r.t. accuracy and diversity on the validation set).
+
+### JR4CE
+
+| Hyperparameter | CLI flag | GLIT-2021 | GLIT-2022 |
+| --- | --- | --- | --- |
+| GCN layers | `--num_gcn_layer` | 6 | 6 |
+| Role-model selection threshold ($\theta_u$) | `--threshold_user` | 0.2 | 0.9 |
+| Dissimilar-job selection threshold ($\theta_j$) | `--threshold_item` | 0.5 | 0.4 |
+| Negative sample size | `--neg_size` | 5 | 1 |
+| Diversity loss weight ($\lambda_{div}$) | `--div_lambda` | 2.0 | 0.5 |
+
+### Fixed values (both datasets)
+
+- Latent dimension (`--dim`): 32
+- Batch size (`--batch_size`): 128
+- Learning rate (`--lr`): 5e-3
+- Optimizer: Adam
+- Initialization: Xavier
+
+> Note: Due to privacy and business constraints, we cannot release the GLIT datasets used in the paper.
+> The hyperparameter values listed here are provided for documentation and as a starting point for users who wish to adapt JR4CE to their own datasets that follow the same input format (see `preprocess/README.md`).
+
 ## Dataset
 
 Due to privacy and business restrictions, we cannot release our dataset right now.
@@ -150,7 +175,7 @@ $ poetry run python -m reranker.test \
     --model mmr \
     --user_embeddings_path <path_to_user_embeddings> \
     --item_embeddings_path <path_to_item_embeddings> \
-    --lambda_factor 0.7
+    --lambda_factor 0.5
 
 # DPP
 $ poetry run python -m reranker.test \
