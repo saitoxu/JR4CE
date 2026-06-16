@@ -88,7 +88,7 @@ $ poetry run python -m JR4CE.test --model_path trained_model/best.pth # please s
 
 ## Hyperparameters used in the paper
 
-The following table reports the hyperparameter values used to produce the main results in Table 2 of the paper. These were selected via Optuna (Pareto-optimal w.r.t. accuracy and diversity on the validation set).
+The following table reports the hyperparameter values used to produce the main results in Table 2 of the paper.
 
 ### JR4CE
 
