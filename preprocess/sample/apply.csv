@@ -1,4 +1,4 @@
-user_id,offer_id,timestamp
+user_id,job_id,timestamp
 1,101,1640995200
 2,102,1640998800
 3,103,1641002400

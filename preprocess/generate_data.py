@@ -2,8 +2,8 @@
 
 This single script converts raw CSV files (``apply.csv``, ``users.csv``,
 ``jobs.csv``) into the knowledge-graph / interaction files consumed by JR4CE
-(``train.txt``, ``val.txt``, ``test.txt``, ``kg.txt``, ``item_kg.txt``,
-``info.txt`` and ``*_original_id_map.txt``).
+(``train.txt``, ``val.txt``, ``test.txt``, ``kg.txt``, ``item_kg.txt`` and
+``info.txt``).
 
 Any subset of the supported attributes can be selected via ``--attributes``,
 so the same script handles different attribute sets (e.g. the paper's GLIT-2021
@@ -61,8 +61,6 @@ class Source:
 @dataclass(frozen=True)
 class Attribute:
     key: str
-    # File name (without extension) of the new-id -> original-id mapping.
-    map_name: str
     item: Source  # value on the job side (jobs.csv)
     hope: Source  # value the user wants (users.csv)
     current: Source  # value the user currently has (users.csv)
@@ -71,28 +69,24 @@ class Attribute:
 ATTRIBUTES: dict[str, Attribute] = {
     "job_type": Attribute(
         key="job_type",
-        map_name="job_type_original_id_map",
         item=Source(["job_type_ids"], mode="multi"),
         hope=Source(["hope_job_type_ids"], mode="multi"),
         current=Source(["recent_job_type_id"], mode="single"),
     ),
     "employment_type": Attribute(
         key="employment_type",
-        map_name="employment_type_original_id_map",
         item=Source(["employment_type_ids"], mode="multi"),
         hope=Source(["hope_employment_type_ids"], mode="multi"),
         current=Source(["employment_type_id"], mode="single"),
     ),
     "industry": Attribute(
         key="industry",
-        map_name="industry_original_id_map",
         item=Source(["industry_id"], mode="single"),
         hope=Source(["hope_industry_ids"], mode="multi"),
         current=Source(["recent_industry_id"], mode="single"),
     ),
     "salary": Attribute(
         key="salary",
-        map_name="annual_income_original_id_map",
         # All income values are expected as categorical bucket ids in the CSV.
         item=Source(["annual_income_id"], mode="single"),
         hope=Source(["hope_annual_income_id"], mode="single"),
@@ -143,8 +137,8 @@ def filter_applies(
     seen: set[tuple[str, str]] = set()
     filtered: list[dict[str, str]] = []
     for apply in applies:
-        key = (apply["user_id"], apply["offer_id"])
-        if apply["user_id"] not in user_ids or apply["offer_id"] not in job_ids:
+        key = (apply["user_id"], apply["job_id"])
+        if apply["user_id"] not in user_ids or apply["job_id"] not in job_ids:
             continue
         if key in seen:
             continue
@@ -157,7 +151,7 @@ def filter_jobs(
     jobs: list[dict[str, str]], applies: list[dict[str, str]]
 ) -> list[dict[str, str]]:
     """Keep only jobs that received at least one apply."""
-    job_ids = {apply["offer_id"] for apply in applies}
+    job_ids = {apply["job_id"] for apply in applies}
     return [job for job in jobs if job["id"] in job_ids]
 
 
@@ -177,7 +171,7 @@ def split_applies(
 ) -> tuple[list[list[str]], list[list[str]], list[list[str]]]:
     """Split applies per user using a time-based (leave-last-out) scheme.
 
-    ``applies`` must be in chronological order (old -> new); ``offer_ids`` for
+    ``applies`` must be in chronological order (old -> new); ``job_ids`` for
     each user therefore ends with the most recent application. The newest
     application becomes the test sample and the second newest becomes the
     validation sample, matching the paper's time-based protocol. Everything
@@ -189,23 +183,23 @@ def split_applies(
     """
     user_applies: dict[str, list[str]] = {}
     for apply in applies:
-        user_applies.setdefault(apply["user_id"], []).append(apply["offer_id"])
+        user_applies.setdefault(apply["user_id"], []).append(apply["job_id"])
 
     train: list[list[str]] = []
     val: list[list[str]] = []
     test: list[list[str]] = []
 
-    for i, (user_id, offer_ids) in enumerate(user_applies.items()):
-        n = len(offer_ids)
+    for i, (user_id, job_ids) in enumerate(user_applies.items()):
+        n = len(job_ids)
         if n >= 3:
-            test.append([user_id, offer_ids.pop()])  # newest -> test
-            val.append([user_id, offer_ids.pop()])  # 2nd newest -> val
+            test.append([user_id, job_ids.pop()])  # newest -> test
+            val.append([user_id, job_ids.pop()])  # 2nd newest -> val
         elif n == 2:
             if i % 2 == 1:
-                val.append([user_id, offer_ids.pop()])
+                val.append([user_id, job_ids.pop()])
             else:
-                test.append([user_id, offer_ids.pop()])
-        train += [[user_id, offer_id] for offer_id in offer_ids]
+                test.append([user_id, job_ids.pop()])
+        train += [[user_id, job_id] for job_id in job_ids]
     return train, val, test
 
 
@@ -344,14 +338,6 @@ def save_interaction(
             f.write(f"{user_id} {job_ids}\n")
 
 
-def save_id_map(path: Path, mapper: dict[str, int]) -> None:
-    """Write ``new_id original_id`` lines, sorted by new id."""
-    reverse = {new_id: original_id for original_id, new_id in mapper.items()}
-    with open(path, "w") as f:
-        for new_id in sorted(reverse):
-            f.write(f"{new_id} {reverse[new_id]}\n")
-
-
 def save_graph(path: Path, graph: list[list[int]]) -> None:
     """Write ``head relation tail`` triples."""
     with open(path, "w") as f:
@@ -424,11 +410,6 @@ def generate(input_dir: Path, output_dir: Path, attributes: list[Attribute]) -> 
     save_interaction(output_dir / "train.txt", train, user_id_map, job_id_map)
     save_interaction(output_dir / "val.txt", val, user_id_map, job_id_map)
     save_interaction(output_dir / "test.txt", test, user_id_map, job_id_map)
-
-    save_id_map(output_dir / "user_original_id_map.txt", user_id_map)
-    save_id_map(output_dir / "item_original_id_map.txt", job_id_map)
-    for attr in attributes:
-        save_id_map(output_dir / f"{attr.map_name}.txt", attr_maps[attr.key])
 
     save_graph(output_dir / "kg.txt", kg)
     save_graph(output_dir / "item_kg.txt", item_kg)

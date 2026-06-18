@@ -6,10 +6,8 @@ attributes can be selected with `--attributes`, so the same script handles
 different attribute sets and arbitrary ablation settings.
 
 > **Note on the source data.** The GLIT dataset used in the paper cannot be
-> released, and the SQL used to extract the raw CSVs from our internal database
-> is specific to a proprietary schema, so it is omitted as well. Prepare the
-> CSV files described below from your own data source. For reference, the paper
-> used these attribute sets:
+> released, so prepare the CSV files described below from your own data source.
+> For reference, the paper used these attribute sets:
 >
 > - **GLIT-2021**: `job_type,employment_type,industry`
 > - **GLIT-2022**: `job_type,employment_type,salary`
@@ -58,7 +56,7 @@ test sample and the next most recent as the validation sample.
 | Column | Required | Description |
 | -- | -- | -- |
 | `user_id` | ✅ | Applicant id (matches `users.csv` `id`). |
-| `offer_id` | ✅ | Job id (matches `jobs.csv` `id`). |
+| `job_id` | ✅ | Job id (matches `jobs.csv` `id`). |
 | `timestamp` | – | Not read directly; only used to sort the rows beforehand. |
 
 ### `users.csv`
@@ -102,9 +100,6 @@ All files are written under `--output`.
 | `kg.txt` | `head_entity relation tail` | Full knowledge graph (item + user edges). |
 | `item_kg.txt` | `head_entity relation tail` | Item-side edges only. |
 | `info.txt` | see below | Sizes and relation ids used by JR4CE. |
-| `user_original_id_map.txt` | `new_id original_id` | User id mapping. |
-| `item_original_id_map.txt` | `new_id original_id` | Job id mapping. |
-| `<attribute>_original_id_map.txt` | `new_id original_id` | One per selected attribute (`salary` → `annual_income_original_id_map.txt`). |
 
 ### `info.txt`
 
