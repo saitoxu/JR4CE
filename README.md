@@ -118,8 +118,7 @@ You can adapt our code for your own dataset with the following dataset format.
 To use our code, the following five types of files are required.
 
 These files can be generated from raw CSV files with `preprocess/generate_data.py`.
-See [`preprocess/README.md`](preprocess/README.md) for the expected CSV schema
-and usage.
+See [`preprocess/README.md`](preprocess/README.md) for the expected CSV schema and usage.
 
 ### train.txt
 
