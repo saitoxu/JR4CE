@@ -1,4 +1,4 @@
-"""Generic preprocessing script for JR4CE / GLIT datasets.
+"""Generic preprocessing script for JR4CE datasets.
 
 This single script converts raw CSV files (``apply.csv``, ``users.csv``,
 ``jobs.csv``) into the knowledge-graph / interaction files consumed by JR4CE
