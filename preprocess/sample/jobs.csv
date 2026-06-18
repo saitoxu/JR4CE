@@ -1,0 +1,6 @@
+id,title,annual_income_id,industry_id,job_type_ids,employment_type_ids
+101,Software Engineer,15013,11,41112-41114,1
+102,Sales Representative,15009,12,41511-81115,1
+103,Data Analyst,15007,13,41111,2
+104,Project Manager,15010,14,51316,1-2
+105,Marketing Specialist,15015,15,41112,2

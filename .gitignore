@@ -11,3 +11,5 @@ datasets/**/*
 /*.db
 *.log
 scripts/**/*
+
+preprocess/sample_out/
