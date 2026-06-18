@@ -97,8 +97,8 @@ All files are written under `--output`.
 | File | Format (per line) | Description |
 | -- | -- | -- |
 | `train.txt` / `val.txt` / `test.txt` | `user_id job_id [job_id ...]` | Interactions, ids reindexed from 0; sorted by id. |
-| `kg.txt` | `head_entity relation tail` | Full knowledge graph (item + user edges). |
-| `item_kg.txt` | `head_entity relation tail` | Item-side edges only. Not used by JR4CE itself; provided for baseline methods. |
+| `kg.txt` | `head_entity relation tail_entity` | Full knowledge graph (item + user edges). |
+| `item_kg.txt` | `head_entity relation tail_entity` | Item-side edges only. Not used by JR4CE itself; provided for baseline methods. |
 | `info.txt` | see below | Sizes and relation ids used by JR4CE. |
 
 ### `info.txt`
