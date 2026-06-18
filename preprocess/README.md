@@ -98,7 +98,7 @@ All files are written under `--output`.
 | -- | -- | -- |
 | `train.txt` / `val.txt` / `test.txt` | `user_id job_id [job_id ...]` | Interactions, ids reindexed from 0; sorted by id. |
 | `kg.txt` | `head_entity relation tail` | Full knowledge graph (item + user edges). |
-| `item_kg.txt` | `head_entity relation tail` | Item-side edges only. |
+| `item_kg.txt` | `head_entity relation tail` | Item-side edges only. Not used by JR4CE itself; provided for baseline methods. |
 | `info.txt` | see below | Sizes and relation ids used by JR4CE. |
 
 ### `info.txt`
@@ -110,12 +110,10 @@ All files are written under `--output`.
 <current relations>     # the user's "recent_*" relations
 ```
 
-Entity ids form one contiguous space laid out as
-`[ jobs | users | attribute_0 values | attribute_1 values | ... ]`, and
-relations are numbered dynamically from the selected attributes: with `k`
-attributes the item relations are `0..k-1`, the preference relations
-`k..2k-1` and the current relations `2k..3k-1` (so the order/number of
-relations follows whatever `--attributes` you pass).
+Entity ids are numbered as `[ jobs | users | attr#0 values | attr#1 values | ... ]`
+(attributes in `--attributes` order), and `entity_size` is the total count.
+Each attribute has 3 relations (item / preference / current), numbered per side:
+for `k` attributes, lines 2–4 of `info.txt` hold `0..k-1`, `k..2k-1`, `2k..3k-1`.
 
 ## Sample data
 
