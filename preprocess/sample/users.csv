@@ -1,0 +1,7 @@
+id,recent_annual_income_id,hope_annual_income_id,recent_industry_id,recent_job_type_id,employment_type_id,hope_industry_ids,hope_job_type_ids,hope_employment_type_ids
+1,15008,15010,11,41111,1,11-12,41111-41112,1
+2,15006,15007,12,51316,1,12,11111-11112,1-2
+3,15011,15012,13,60000,2,13-14,41111,2
+4,15004,15005,14,70000,1,,51316,1-2
+5,15009,15009,11,41112,1,11,41111-51316,1
+6,15013,15015,15,60000,2,15,41112,2
