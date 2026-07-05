@@ -4,7 +4,7 @@
 
 The expanding online job market and the impact of recommender systems highlight the need for practical job recommendations.
 While diversity is crucial, job recommendations uniquely require high-quality diversity to accelerate career exploration rather than just maximizing quantitative metrics.
-Existing systems often fall short, as high diversity scores do not always align with user preferences, resulting in poor exploration and user dissatisfaction.
+Existing systems often fall short, as high diversity scores do not always align with user preferences, resulting in user dissatisfaction.
 To address this, we propose Job Recommendation for Career Exploration (JR4CE), which uses user-job interaction data, explicit preferences, and current user information, aiming to achieve high-quality diversity.
 JR4CE has three main modules: (1) Knowledge Graph Learning Module represents explicit preferences and current information as graphs and learns latent representations of users and jobs.
 (2) Collaborative Filtering Module uses interaction data to refine the latent representations from (1) and predicts the likelihood of a target user's job application.
