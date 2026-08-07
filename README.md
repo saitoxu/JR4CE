@@ -9,7 +9,7 @@ To address this, we propose Job Recommendation for Career Exploration (JR4CE), w
 JR4CE has three main modules: (1) Knowledge Graph Learning Module represents explicit preferences and current information as graphs and learns latent representations of users and jobs.
 (2) Collaborative Filtering Module uses interaction data to refine the latent representations from (1) and predicts the likelihood of a target user's job application.
 (3) Diversity Data Augmentation Module performs data augmentation using the interaction data of role model users for a target user to enhance diversity, thereby aiming to support career exploration.
-Based on offline metrics and qualitative case studies, our experiments using datasets constructed from an actual job search website show that JR4CE outperforms several state-of-the-arts in both recommendation accuracy and diversity.
+Based on offline metrics and qualitative case studies, our experiments using datasets constructed from an actual job search website show that JR4CE outperforms several state-of-the-arts in accuracy and the accuracy-diversity balance.
 Specifically, JR4CE effectively works for users in the early stages of career exploration activities.
 
 ## Usage
