@@ -9,7 +9,7 @@ To address this, we propose Job Recommendation for Career Exploration (JR4CE), w
 JR4CE has three main modules: (1) Knowledge Graph Learning Module represents explicit preferences and current information as graphs and learns latent representations of users and jobs.
 (2) Collaborative Filtering Module uses interaction data to refine the latent representations from (1) and predicts the likelihood of a target user's job application.
 (3) Diversity Data Augmentation Module performs data augmentation using the interaction data of role model users for a target user to enhance diversity, thereby aiming to support career exploration.
-Based on offline metrics and qualitative case studies, our experiments using datasets constructed from an actual job search website show that JR4CE outperforms several state-of-the-arts in both recommendation accuracy and diversity.
+Based on offline metrics and qualitative case studies, our experiments using datasets constructed from an actual job search website show that JR4CE outperforms several state-of-the-arts in accuracy and the accuracy-diversity balance.
 Specifically, JR4CE effectively works for users in the early stages of career exploration activities.
 
 ## Usage
@@ -88,9 +88,10 @@ $ poetry run python -m JR4CE.test --model_path trained_model/best.pth # please s
 
 ## Hyperparameters used in the paper
 
-The following table reports the hyperparameter values used to produce the main results in Table 2 of the paper.
+The tables below report the exact hyperparameter values used to produce the main results in Table 2 of the paper.
+The code state corresponding to these results is tagged as [`tors-final`](https://github.com/saitoxu/JR4CE/tree/tors-final); all arguments and their defaults are defined in [`JR4CE/parser.py`](https://github.com/saitoxu/JR4CE/blob/tors-final/JR4CE/parser.py).
 
-### JR4CE
+### Dataset-specific values (tuned)
 
 | Hyperparameter | CLI flag | GLIT-2021 | GLIT-2022 |
 | --- | --- | --- | --- |
@@ -102,11 +103,57 @@ The following table reports the hyperparameter values used to produce the main r
 
 ### Fixed values (both datasets)
 
-- Latent dimension (`--dim`): 32
-- Batch size (`--batch_size`): 128
-- Learning rate (`--lr`): 5e-3
-- Optimizer: Adam
-- Initialization: Xavier
+| Hyperparameter | CLI flag | Value |
+| --- | --- | --- |
+| Latent dimension | `--dim` | 32 |
+| Batch size | `--batch_size` | 128 |
+| Learning rate | `--lr` | 5e-3 |
+| Max epochs | `--epoch` | 300 |
+| Early-stopping patience (epochs) | `--patience` | 10 |
+| Validation interval (epochs) | `--val_interval` | 1 |
+| Cut-offs for metric@K | `--Ks` | `[5,10,20]` |
+| Random seed | `--seed` | 1234 |
+| Knowledge Graph Learning Module | `--kgl_module` | 1 (enabled) |
+| Collaborative Filtering Module | `--cf_module` | 1 (enabled) |
+| Edge type information in GAT | `--use_edge_type` | 0 (not used) |
+| Optimizer | — | Adam |
+| Initialization | — | Xavier |
+
+Every value listed above is the default defined in `JR4CE/parser.py`, so the paper configuration can also be reproduced by passing only the dataset-specific flags.
+
+### Exact commands
+
+The following commands reproduce the JR4CE rows of Table 2 (every value from the two tables above is passed explicitly):
+
+```sh
+# GLIT-2021
+$ poetry run python -m JR4CE.train \
+    --dataset glit2021 \
+    --seed 1234 \
+    --dim 32 --batch_size 128 --lr 5e-3 \
+    --epoch 300 --patience 10 --val_interval 1 --Ks "[5,10,20]" \
+    --num_gcn_layer 6 \
+    --threshold_user 0.2 --threshold_item 0.5 \
+    --neg_size 5 --div_lambda 2.0 \
+    --kgl_module 1 --cf_module 1 --use_edge_type 0
+
+# GLIT-2022
+$ poetry run python -m JR4CE.train \
+    --dataset glit2022 \
+    --seed 1234 \
+    --dim 32 --batch_size 128 --lr 5e-3 \
+    --epoch 300 --patience 10 --val_interval 1 --Ks "[5,10,20]" \
+    --num_gcn_layer 6 \
+    --threshold_user 0.9 --threshold_item 0.4 \
+    --neg_size 1 --div_lambda 0.5 \
+    --kgl_module 1 --cf_module 1 --use_edge_type 0
+```
+
+Training saves the best checkpoint under `--save_path` (default: `trained_model`), which is then evaluated with:
+
+```sh
+$ poetry run python -m JR4CE.test --dataset glit2021 --model_path trained_model/best.pth
+```
 
 > Note: Due to privacy and business constraints, we cannot release the GLIT datasets used in the paper.
 > The hyperparameter values listed here are provided for documentation and as a starting point for users who wish to adapt JR4CE to their own datasets that follow the same input format (see `preprocess/README.md`).

@@ -14,7 +14,7 @@ def parse_args():
         "--data_path", nargs="?", default="datasets", help="Input data path."
     )
     parser.add_argument("--dim", type=int, default=32, help="Number of dimension.")
-    parser.add_argument("--epoch", type=int, default=50, help="Number of epoch.")
+    parser.add_argument("--epoch", type=int, default=300, help="Number of epoch.")
     parser.add_argument("--batch_size", type=int, default=128, help="Batch size.")
     parser.add_argument("--lr", type=float, default=5e-3, help="Learning rate.")
     parser.add_argument(
